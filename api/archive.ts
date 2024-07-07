@@ -1,5 +1,4 @@
 // import { setGlobalDispatcher, ProxyAgent } from 'undici';
-
 // import { RequestOption } from '@modern-js/runtime/server';
 
 // const proxyUrl = 'http://127.0.0.1:7890';
@@ -14,19 +13,25 @@ export default async ({ query }: any) => {
     return { ok: 0, url: '' };
   }
   try {
-    const response = await fetch(`https://web.archive.org/save/${url}`, {
-      headers: {
-        Accept: `*/*`,
-        'Accept-Encoding': `gzip, deflate`,
-        Connection: `keep-alive`,
-        Host: `web.archive.org`,
-        'User-Agent': `HTTPie/3.2.2`,
+    const response = await fetch(
+      `https://archive.is/submit/?anyway=1&url=${encodeURIComponent(url)}`,
+      {
+        method: 'HEAD',
+        headers: {
+          Accept: `*/*`,
+          'Accept-Encoding': `gzip, deflate, br`,
+          Connection: `keep-alive`,
+          'User-Agent': `HTTPie/3.2.2`,
+        },
+        redirect: 'manual',
       },
-      redirect: 'manual',
-    });
-    const locationHeader = response.headers.get('location');
-    if (locationHeader) {
-      return { ok: 1, url: locationHeader };
+    );
+    const backup =
+      response.headers.get('location') ??
+      response.headers.get('refresh')?.slice(6) ??
+      '';
+    if (backup) {
+      return { ok: 1, url: backup };
     }
   } catch (e: any) {
     console.log(e?.name, e);
