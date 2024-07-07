@@ -1,0 +1,226 @@
+{
+  "zh": {
+    "translation": {
+      "src": "原链接",
+      "dst": "备份到",
+      "src.msg": "选择要存档的字段",
+      "dst.msg": "选择备份到哪一列",
+      "dst.tip": "也可输入字段名后按回车来新建一列",
+      "btn": "备份网页",
+      "doc": "说明文档",
+      "blank": "请先配置源字段和目标字段",
+      "nourl": "列中没有链接",
+      "done": "网页备份完成"
+    }
+  },
+  "zh-TW": {
+    "translation": {
+      "src": "原始連結",
+      "dst": "備份到",
+      "src.msg": "選擇要存檔的欄位",
+      "dst.msg": "選擇備份到哪一列",
+      "dst.tip": "也可輸入欄位名稱後按Enter來新增一列",
+      "btn": "備份網頁",
+      "doc": "說明文件",
+      "blank": "請先配置源欄位和目標欄位",
+      "nourl": "列中没有連結",
+      "done": "網頁備份完成"
+    }
+  },
+  "zh-HK": {
+    "translation": {
+      "src": "原始連結",
+      "dst": "備份到",
+      "src.msg": "選擇要存檔的欄位",
+      "dst.msg": "選擇備份到哪一列",
+      "dst.tip": "也可輸入欄位名稱後按Enter來新增一列",
+      "btn": "備份網頁",
+      "doc": "說明文件",
+      "blank": "請先配置源欄位和目標欄位",
+      "nourl": "列中没有連結",
+      "done": "網頁備份完成"
+    }
+  },
+  "en": {
+    "translation": {
+      "src": "Original Link",
+      "dst": "Backup To",
+      "src.msg": "Select the field to archive",
+      "dst.msg": "Select the column to backup to",
+      "dst.tip": "You can also press Enter after entering the field name to create a new column",
+      "btn": "Backup Webpage",
+      "doc": "Documentation",
+      "blank": "Please configure the source field and target field first",
+      "nourl": "No link in the column",
+      "done": "Webpage backup completed"
+    }
+  },
+  "ja": {
+    "translation": {
+      "src": "元のリンク",
+      "dst": "バックアップ先",
+      "src.msg": "アーカイブするフィールドを選択",
+      "dst.msg": "バックアップ先の列を選択",
+      "dst.tip": "または、フィールド名を入力してからEnterを押して新しい列を作成",
+      "btn": "ウェブページをバックアップ",
+      "doc": "ドキュメント",
+      "blank": "まず、元のフィールドとターゲットのフィールドを設定してください",
+      "nourl": "列にリンクがありません",
+      "done": "ウェブページのバックアップが完了しました"
+    }
+  },
+  "fr": {
+    "translation": {
+      "src": "Lien original",
+      "dst": "Sauvegarder vers",
+      "src.msg": "Sélectionnez le champ à archiver",
+      "dst.msg": "Sélectionnez la colonne vers laquelle sauvegarder",
+      "dst.tip": "Vous pouvez également entrer un nom de colonne puis appuyer sur Entrée pour créer une nouvelle colonne",
+      "btn": "Sauvegarder la page Web",
+      "doc": "Documentation",
+      "blank": "Veuillez d'abord configurer le champ source et le champ cible",
+      "nourl": "La colonne ne contient pas de lien",
+      "done": "La sauvegarde de la page Web est terminée"
+    }
+  },
+  "hi": {
+    "translation": {
+      "src": "मूल लिंक",
+      "dst": "बैकअप करें",
+      "src.msg": "जिन्हें अभिलेखन करने के लिए क्षेत्र चुनें",
+      "dst.msg": "बैकअप करने के लिए कौनसा स्तंभ चुनें",
+      "dst.tip": "या फ़ील्ड नाम दर्ज करें और फिर Enter दबाएं नया स्तंभ बनाएं",
+      "btn": "वेबपेज को बैकअप करें",
+      "doc": "दस्तावेज़ीकरण",
+      "blank": "कृपया पहले स्रोत क्षेत्र और लक्ष्य क्षेत्र को कॉन्फ़िगर करें",
+      "nourl": "कौलम में कोई लिंक नहीं है",
+      "done": "वेबपृष्ठ बैकअप पूरा हुआ है"
+    }
+  },
+  "id": {
+    "translation": {
+      "src": "Tautan Asli",
+      "dst": "Backup ke",
+      "src.msg": "Pilih bidang yang akan diarsipkan",
+      "dst.msg": "Pilih kolom tujuan backup",
+      "dst.tip": "Atau masukkan nama bidang lalu tekan Enter untuk membuat kolom baru",
+      "btn": "Backup Halaman Web",
+      "doc": "Dokumentasi",
+      "blank": "Silakan konfigurasikan bidang sumber dan bidang target terlebih dahulu",
+      "nourl": "Kolom ini tidak memiliki tautan",
+      "done": "Backup halaman web selesai"
+    }
+  },
+  "it": {
+    "translation": {
+      "src": "Link originale",
+      "dst": "Backup verso",
+      "src.msg": "Seleziona il campo da archiviare",
+      "dst.msg": "Seleziona la colonna in cui salvare il backup",
+      "dst.tip": "Oppure inserisci il nome del campo e premi Invio per creare una nuova colonna",
+      "btn": "Backup pagina web",
+      "doc": "Documentazione",
+      "blank": "Configura prima il campo sorgente e il campo destinazione",
+      "nourl": "La colonna non contiene link",
+      "done": "Backup pagina web completato"
+    }
+  },
+  "ko": {
+    "translation": {
+      "src": "원본 링크",
+      "dst": "백업할 위치",
+      "src.msg": "어카이브할 필드 선택",
+      "dst.msg": "백업할 열 선택",
+      "dst.tip": "또는 필드 이름을 입력하고 Enter를 눌러 새 열을 생성",
+      "btn": "웹 페이지 백업",
+      "doc": "설명서",
+      "blank": "먼저 소스 필드와 대상 필드를 구성하십시오",
+      "nourl": "열에 링크가 없습니다",
+      "done": "웹 페이지 백업이 완료되었습니다"
+    }
+  },
+  "pt": {
+    "translation": {
+      "src": "Link original",
+      "dst": "Fazer backup para",
+      "src.msg": "Selecione o campo a ser arquivado",
+      "dst.msg": "Selecione a coluna para onde fazer backup",
+      "dst.tip": "Ou insira o nome do campo e pressione Enter para criar uma nova coluna",
+      "btn": "Fazer backup da página da web",
+      "doc": "Documentação",
+      "blank": "Configure primeiro o campo de origem e o campo de destino",
+      "nourl": "A coluna não possui links",
+      "done": "Backup da página da web concluído"
+    }
+  },
+  "ru": {
+    "translation": {
+      "src": "Оригинальная ссылка",
+      "dst": "Резервное копирование",
+      "src.msg": "Выберите поле для архивации",
+      "dst.msg": "Выберите колонку для резервного копирования",
+      "dst.tip": "Также можно ввести имя поля и нажать Enter, чтобы создать новую колонку",
+      "btn": "Резервное копирование веб-страницы",
+      "doc": "Документация",
+      "blank": "Сначала настройте исходное поле и целевое поле",
+      "nourl": "В столбце нет ссылок",
+      "done": "Резервное копирование веб-страницы завершено"
+    }
+  },
+  "th": {
+    "translation": {
+      "src": "ลิงก์ต้นฉบับ",
+      "dst": "สำรองไฟล์ไปยัง",
+      "src.msg": "เลือกฟิลด์ที่ต้องการจัดเก็บ",
+      "dst.msg": "เลือกคอลัมน์ที่ต้องการสำรองไฟล์",
+      "dst.tip": "หรือใส่ชื่อฟิลด์แล้วกด Enter เพื่อสร้างคอลัมน์ใหม่",
+      "btn": "สำรองไฟล์หน้าเว็บ",
+      "doc": "เอกสารแนะนำ",
+      "blank": "ตั้งค่าฟิลด์แห่งที่มาและฟิลด์เป้าหมายก่อน",
+      "nourl": "ไม่มีลิงก์ในคอลัมน์นี้",
+      "done": "การสำรองไฟล์หน้าเว็บเสร็จสมบูรณ์แล้ว"
+    }
+  },
+  "vi": {
+    "translation": {
+      "src": "Liên kết gốc",
+      "dst": "Sao lưu vào",
+      "src.msg": "Chọn trường cần lưu trữ",
+      "dst.msg": "Chọn cột để sao lưu",
+      "dst.tip": "Hoặc nhập tên trường và nhấn Enter để tạo cột mới",
+      "btn": "Sao lưu trang web",
+      "doc": "Tài liệu hướng dẫn",
+      "blank": "Hãy cấu hình trường nguồn và trường đích trước",
+      "nourl": "Cột không có liên kết",
+      "done": "Sao lưu trang web hoàn tất"
+    }
+  },
+  "de": {
+    "translation": {
+      "src": "Original-Link",
+      "dst": "Sichern nach",
+      "src.msg": "Wählen Sie die zu archivierenden Felder aus",
+      "dst.msg": "Wählen Sie die Spalte aus, in die gesichert werden soll",
+      "dst.tip": "Sie können auch einen Feldnamen eingeben und Enter drücken, um eine neue Spalte zu erstellen",
+      "btn": "Webseite sichern",
+      "doc": "Dokumentation",
+      "blank": "Bitte konfigurieren Sie zuerst die Quellfelder und Zielfelder",
+      "nourl": "Keine Links in der Spalte",
+      "done": "Webseitensicherung abgeschlossen"
+    }
+  },
+  "es": {
+    "translation": {
+      "src": "Enlace original",
+      "dst": "Guardar en",
+      "src.msg": "Seleccione los campos que desea archivar",
+      "dst.msg": "Seleccione la columna en la que desea guardar",
+      "dst.tip": "También puede ingresar un nombre de campo y presionar Enter para crear una nueva columna",
+      "btn": "Guardar página web",
+      "doc": "Documentación",
+      "blank": "Configure primero los campos de origen y destino",
+      "nourl": "No hay enlaces en la columna",
+      "done": "La copia de seguridad de la página web ha sido completada"
+    }
+  }
+}

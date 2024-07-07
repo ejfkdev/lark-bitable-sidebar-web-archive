@@ -22,10 +22,15 @@ output_resource/
 log/
 
 .vscode/**/*
-!.vscode/settings.json
-!.vscode/extensions.json
+.vscode/settings.json
+.vscode/extensions.json
 .idea/
 
 **/*/typings/auto-generated
 
 modern.config.local.*
+.output/
+.vscode/
+.husky/
+
+**/*.map

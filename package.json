@@ -10,7 +10,8 @@
     "new": "modern new",
     "lint": "modern lint",
     "prepare": "husky install",
-    "upgrade": "modern upgrade"
+    "upgrade": "modern upgrade",
+    "deploy": "modern deploy"
   },
   "engines": {
     "node": ">=16.18.1"
@@ -22,26 +23,44 @@
   },
   "eslintIgnore": [
     "node_modules/",
-    "dist/"
+    "dist/",
+    "lib"
   ],
   "dependencies": {
+    "@arco-design/web-react": "^2.63.1",
+    "@douyinfe/semi-ui": "^2.61.0",
+    "@lark-base-open/js-sdk": "^0.4.0",
+    "@modern-js/plugin-bff": "2.54.6",
     "@modern-js/runtime": "2.54.6",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "ahooks": "^3.8.0",
+    "cors": "^2.8.5",
+    "express": "~4.19.2",
+    "i18next": "^23.11.5",
+    "i18next-browser-languagedetector": "^8.0.0",
+    "react": "~18.3.1",
+    "react-dom": "~18.3.1",
+    "react-i18next": "^14.1.2",
+    "undici": "^6.19.2"
   },
   "devDependencies": {
+    "@modern-js-app/eslint-config": "2.54.6",
     "@modern-js/app-tools": "2.54.6",
     "@modern-js/eslint-config": "2.54.6",
+    "@modern-js/plugin-express": "2.54.6",
+    "@modern-js/plugin-ssg": "2.54.6",
     "@modern-js/tsconfig": "2.54.6",
-    "@modern-js-app/eslint-config": "2.54.6",
-    "typescript": "~5.0.4",
-    "@types/jest": "~29.2.4",
-    "@types/node": "~16.11.7",
-    "@types/react": "~18.0.26",
-    "@types/react-dom": "~18.0.10",
-    "lint-staged": "~13.1.0",
-    "prettier": "~2.8.1",
-    "husky": "~8.0.1",
-    "rimraf": "~3.0.2"
+    "@types/cors": "^2.8.17",
+    "@types/express": "~4.17.21",
+    "@types/jest": "~29.5.12",
+    "@types/node": "~20.14.10",
+    "@types/react": "~18.3.3",
+    "@types/react-dom": "~18.3.0",
+    "husky": "~9.0.11",
+    "lint-staged": "~15.2.7",
+    "prettier": "~3.3.2",
+    "rimraf": "~5.0.8",
+    "ts-node": "~10.9.2",
+    "tsconfig-paths": "~4.2.0",
+    "typescript": "~5.5.3"
   }
 }

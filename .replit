@@ -1,4 +1,4 @@
-entrypoint = "index.js"
+# entrypoint = "index.js"
 modules = ["nodejs-20"]
 hidden = [".config", "package-lock.json"]
 
@@ -12,6 +12,12 @@ channel = "stable-23_05"
 language = "nodejs"
 
 [deployment]
-run = ["node", "index.js"]
+# run = ["node", "index.js"]
+build = "pnpx modern deploy"
+run = "node .output/index"
 deploymentTarget = "cloudrun"
 ignorePorts = false
+
+[[ports]]
+localPort = 8080
+externalPort = 80
