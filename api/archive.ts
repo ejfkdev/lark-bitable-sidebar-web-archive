@@ -14,7 +14,7 @@ export default async ({ query }: any) => {
   }
   try {
     const response = await fetch(
-      `https://archive.is/submit/?anyway=1&url=${encodeURIComponent(url)}`,
+      `https://archive.ph/submit/?anyway=1&url=${encodeURIComponent(url)}`,
       {
         method: 'HEAD',
         headers: {
