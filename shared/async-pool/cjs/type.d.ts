@@ -118,22 +118,39 @@ export type RateLimiterCallback<T> = ((done: Resolve, data: TaskTodo<T>) => void
 export type AsyncPoolOptions<T> = {
     /** 该异步并发池的名称，仅用于区分不同的实例 */
     name?: string;
-    /** 并行度，同一时间最多能有多少个任务处于await状态。默认为`2`
+    /** 并行度，同一时间最多能有多少个任务处于await状态
+     * @default 2
      */
     parallel?: number;
-    /** 添加任务是否自动执行，默认为`true`
+    /** 添加任务是否自动执行
      *
      * 如果为false，需要手动调用`AsyncPool.run()`来启动任务队列
+     *
+     * @default false
      */
     autoRun?: boolean;
+    /**
+     * 是否自动重试失败的任务
+     * @default false
+     */
+    autoRetry?: boolean;
+    /**
+     * 重试任务默认延迟
+     * @default 0
+     */
+    retryDelay?: number;
     /** 任务的全局默认执行方法 */
     worker?: Worker | null;
-    /** 任务最大重试次数，负数为无限，默认为`3`
+    /** 任务最大重试次数，负数为无限
      *
      * 重试超出限制后后会触发`taskErrorCallback`，error的name为`AsyncPoolRetryCountLimit`
+     *
+     * @default 2**3
      */
     maxRetryCount?: number;
-    /** 所有任务完成事件触发延迟，默认`0` */
+    /** 所有任务完成事件触发延迟，默认`0`
+     * @default 0
+     */
     waitTime?: number;
     /** 每个任务执行完成后的回调 */
     taskResultCallback?: TaskCallback<T> | null;
@@ -147,7 +164,9 @@ export type AsyncPoolOptions<T> = {
     parallelIdelTimeout?: number;
     /** 任务执行频率限制 */
     rateLimiter?: RateLimiterCallback<T> | null;
-    /** 任务队列最大缓存数量 */
+    /** 任务队列最大缓存数量
+     * @default MAX_SAFE_INTEGER
+     */
     queueCacheLimit?: number;
     /**
      * 如果在worker中需要以触发某些回调事件为完成标志，则需要设置为true
@@ -155,6 +174,8 @@ export type AsyncPoolOptions<T> = {
      * 这时worker的第二个参数中会包含一个`next`方法
      *
      * 需要在worker方法中手动调用`next(result)`才会结束此任务的执行
+     *
+     * @default false
      */
     callbackInWorker?: boolean;
 };

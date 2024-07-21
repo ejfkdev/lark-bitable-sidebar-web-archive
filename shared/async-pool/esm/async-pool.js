@@ -27,6 +27,7 @@ var _paused = /*#__PURE__*/new WeakMap();
 var _needBreak = /*#__PURE__*/new WeakMap();
 var _activeWorker = /*#__PURE__*/new WeakMap();
 var _reAddCount = /*#__PURE__*/new WeakMap();
+var _limitPromise = /*#__PURE__*/new WeakMap();
 var _reAddTaskTodo = /*#__PURE__*/new WeakSet();
 var _next = /*#__PURE__*/new WeakSet();
 var _exec = /*#__PURE__*/new WeakSet();
@@ -60,13 +61,17 @@ export var AsyncPool = /*#__PURE__*/function () {
       _options$allWorkerDon,
       _options$rateLimiter,
       _options$queueCacheLi,
-      _options$callbackInWo;
+      _options$callbackInWo,
+      _options$autoRetry,
+      _options$retryDelay;
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {
       name: '',
       parallel: 2,
       maxRetryCount: Number.MAX_SAFE_INTEGER,
       waitTime: 0,
       autoRun: true,
+      autoRetry: false,
+      retryDelay: 0,
       worker: null,
       taskResultCallback: null,
       taskErrorCallback: null,
@@ -153,9 +158,19 @@ export var AsyncPool = /*#__PURE__*/function () {
     _defineProperty(this, "taskFailCallback", null);
     /**
      * 任务最多重试次数，如果任务失败重试次数超过该限制，任务数据会被丢弃不再添加到任务队列中
-     * @default Number.MAX_SAFE_INTEGER
+     * @default 2**3
      */
     _defineProperty(this, "maxRetryCount", Math.pow(2, 3));
+    /**
+     * 是否自动重试失败的任务
+     * @default false
+     */
+    _defineProperty(this, "autoRetry", false);
+    /**
+     * 重试任务默认延迟
+     * @default 0
+     */
+    _defineProperty(this, "retryDelay", 0);
     /**
      * 触发所有任务完成之前等待的冗余时间
      */
@@ -221,6 +236,13 @@ export var AsyncPool = /*#__PURE__*/function () {
     _classPrivateFieldInitSpec(this, _reAddCount, {
       writable: true,
       value: 0
+    });
+    /**
+     * 限速等待
+     */
+    _classPrivateFieldInitSpec(this, _limitPromise, {
+      writable: true,
+      value: null
     });
     _classPrivateFieldInitSpec(this, _events, {
       writable: true,
@@ -323,6 +345,8 @@ export var AsyncPool = /*#__PURE__*/function () {
     options.queueCacheLimit = (_options$queueCacheLi = options.queueCacheLimit) !== null && _options$queueCacheLi !== void 0 ? _options$queueCacheLi : Number.MAX_SAFE_INTEGER;
     this.queueCacheLimit = options.queueCacheLimit < 1 ? 1 : options.queueCacheLimit;
     this.callbackInWorker = (_options$callbackInWo = options.callbackInWorker) !== null && _options$callbackInWo !== void 0 ? _options$callbackInWo : false;
+    this.autoRetry = (_options$autoRetry = options.autoRetry) !== null && _options$autoRetry !== void 0 ? _options$autoRetry : false;
+    this.retryDelay = (_options$retryDelay = options.retryDelay) !== null && _options$retryDelay !== void 0 ? _options$retryDelay : 0;
     _classPrivateFieldGet(this, _events).run = GetPromiseKit();
     _classPrivateFieldGet(this, _events).stop = GetPromiseKit();
     _classPrivateFieldGet(this, _events).oneWorkerDone = GetPromiseKit();
@@ -636,7 +660,7 @@ export var AsyncPool = /*#__PURE__*/function () {
     value: (function () {
       var _run = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5() {
         var _classPrivateFieldGet17, _classPrivateFieldGet18, _classPrivateFieldGet22, _classPrivateFieldGet23;
-        var _this$activeWorker3, _this$activeWorker4, _classPrivateFieldGet19, _ref, _ref2, task_todo, none_todo, _classPrivateFieldGet20, _classPrivateFieldGet21;
+        var _this$activeWorker3, _this$activeWorker4, _classPrivateFieldGet19, _ref, _ref2, task_todo, none_todo, _classPrivateFieldGet20, _classPrivateFieldGet21, _this$allWorkerDoneCa;
         return _regeneratorRuntime().wrap(function _callee5$(_context5) {
           while (1) switch (_context5.prev = _context5.next) {
             case 0:
@@ -652,33 +676,35 @@ export var AsyncPool = /*#__PURE__*/function () {
               // 所有任务完成事件初始化
               _classPrivateFieldGet(this, _events).allWorkerDone = GetPromiseKit();
               (_classPrivateFieldGet17 = _classPrivateFieldGet(this, _events).run) === null || _classPrivateFieldGet17 === void 0 || (_classPrivateFieldGet18 = _classPrivateFieldGet17.Resolve) === null || _classPrivateFieldGet18 === void 0 || _classPrivateFieldGet18.call(_classPrivateFieldGet17);
-            case 6:
+              _context5.next = 8;
+              return _classPrivateFieldGet(this, _limitPromise);
+            case 8:
               if (!true) {
-                _context5.next = 27;
+                _context5.next = 28;
                 break;
               }
               if (!_classPrivateFieldGet(this, _needBreak)) {
-                _context5.next = 9;
+                _context5.next = 11;
                 break;
               }
-              return _context5.abrupt("break", 27);
-            case 9:
-              _context5.next = 11;
-              return _classPrivateMethodGet(this, _waitAddOrDone, _waitAddOrDone2).call(this);
+              return _context5.abrupt("break", 28);
             case 11:
               _context5.next = 13;
-              return _classPrivateMethodGet(this, _next, _next2).call(this);
+              return _classPrivateMethodGet(this, _waitAddOrDone, _waitAddOrDone2).call(this);
             case 13:
+              _context5.next = 15;
+              return _classPrivateMethodGet(this, _next, _next2).call(this);
+            case 15:
               _ref = _context5.sent;
               _ref2 = _slicedToArray(_ref, 2);
               task_todo = _ref2[0];
               none_todo = _ref2[1];
               if (!none_todo) {
-                _context5.next = 19;
+                _context5.next = 21;
                 break;
               }
-              return _context5.abrupt("break", 27);
-            case 19:
+              return _context5.abrupt("break", 28);
+            case 21:
               _classPrivateFieldSet(this, _activeWorker, (_this$activeWorker3 = _classPrivateFieldGet(this, _activeWorker), _this$activeWorker4 = _this$activeWorker3++, _this$activeWorker3)), _this$activeWorker4;
               if (!((_classPrivateFieldGet19 = _classPrivateFieldGet(this, _events).activeWorkerClear) !== null && _classPrivateFieldGet19 !== void 0 && _classPrivateFieldGet19.Promise)) {
                 _classPrivateFieldGet(this, _events).activeWorkerClear = GetPromiseKit();
@@ -687,23 +713,23 @@ export var AsyncPool = /*#__PURE__*/function () {
                 _classPrivateFieldGet(this, _events).parallelIdel = GetPromiseKit();
               }
               // 卡点，主要用于控制执行速率
-              _context5.next = 24;
-              return _classPrivateMethodGet(this, _rateLimit, _rateLimit2).call(this, task_todo);
-            case 24:
+              _classPrivateFieldSet(this, _limitPromise, _classPrivateMethodGet(this, _rateLimit, _rateLimit2).call(this, task_todo));
               _classPrivateMethodGet(this, _exec, _exec2).call(this, task_todo);
-              _context5.next = 6;
+              _context5.next = 8;
               break;
-            case 27:
+            case 28:
               _classPrivateFieldSet(this, _needBreak, false);
               _classPrivateFieldSet(this, _running, false);
               if (_classPrivateFieldGet(this, _queue).length == 0 && _classPrivateFieldGet(this, _activeWorker) == 0 && _classPrivateFieldGet(this, _reAddCount) == 0) {
                 (_classPrivateFieldGet20 = _classPrivateFieldGet(this, _events).allWorkerDone) === null || _classPrivateFieldGet20 === void 0 || (_classPrivateFieldGet21 = _classPrivateFieldGet20.Resolve) === null || _classPrivateFieldGet21 === void 0 || _classPrivateFieldGet21.call(_classPrivateFieldGet20);
+                (_this$allWorkerDoneCa = this.allWorkerDoneCallback) === null || _this$allWorkerDoneCa === void 0 || _this$allWorkerDoneCa.call(this);
               }
               (_classPrivateFieldGet22 = _classPrivateFieldGet(this, _events).stop) === null || _classPrivateFieldGet22 === void 0 || (_classPrivateFieldGet23 = _classPrivateFieldGet22.Resolve) === null || _classPrivateFieldGet23 === void 0 || _classPrivateFieldGet23.call(_classPrivateFieldGet22);
               _classPrivateFieldGet(this, _events).stop = GetPromiseKit();
               _classPrivateFieldGet(this, _events).run = GetPromiseKit();
+              _classPrivateFieldSet(this, _limitPromise, _classPrivateMethodGet(this, _rateLimit, _rateLimit2).call(this, null));
               return _context5.abrupt("return", true);
-            case 34:
+            case 36:
             case "end":
               return _context5.stop();
           }
@@ -795,7 +821,7 @@ function _exec3() {
     var _retryCount,
       _this3 = this;
     var _this$activeWorker, _this$activeWorker2;
-    var error, result, retried, data, worker, workerFn, retryCount, fn, promise, resolve, _Wait3, _Wait4, cbArgs, _classPrivateFieldGet25, _classPrivateFieldGet26, _classPrivateFieldGet27, _classPrivateFieldGet28, _classPrivateFieldGet29, _classPrivateFieldGet30;
+    var error, result, retried, data, worker, workerFn, retryCount, retry, fn, promise, resolve, _Wait3, _Wait4, cbArgs, _classPrivateFieldGet25, _classPrivateFieldGet26, _classPrivateFieldGet27, _classPrivateFieldGet28, _classPrivateFieldGet29, _classPrivateFieldGet30;
     return _regeneratorRuntime().wrap(function _callee7$(_context7) {
       while (1) switch (_context7.prev = _context7.next) {
         case 0:
@@ -804,20 +830,23 @@ function _exec3() {
           retried = false;
           data = task_todo.data, worker = task_todo.worker, workerFn = task_todo.workerFn, retryCount = task_todo.retryCount;
           retryCount = (_retryCount = retryCount) !== null && _retryCount !== void 0 ? _retryCount : 0;
-
-          // 执行，获得任务结果
-          _context7.prev = 5;
+          retry = function retry(delayMs) {
+            if (retried) return;
+            retried = true;
+            return _classPrivateMethodGet(_this3, _reAddTaskTodo, _reAddTaskTodo2).call(_this3, task_todo, delayMs !== null && delayMs !== void 0 ? delayMs : _this3.retryDelay);
+          }; // 执行，获得任务结果
+          _context7.prev = 6;
           if (!(workerFn != null && isExecutable(workerFn))) {
-            _context7.next = 12;
+            _context7.next = 13;
             break;
           }
-          _context7.next = 9;
+          _context7.next = 10;
           return workerFn(this);
-        case 9:
+        case 10:
           result = _context7.sent;
-          _context7.next = 22;
+          _context7.next = 23;
           break;
-        case 12:
+        case 13:
           // 单个任务配置的执行者、全局执行者
           fn = worker !== null && worker !== void 0 ? worker : this.worker;
           promise = void 0, resolve = void 0;
@@ -827,34 +856,34 @@ function _exec3() {
             promise = _Wait4[0];
             resolve = _Wait4[1];
           }
-          _context7.next = 17;
+          _context7.next = 18;
           return AsyncRun(fn, data, {
             retryCount: retryCount,
             pool: this,
-            retry: function retry(delayMs) {
-              retried = true;
-              _classPrivateMethodGet(_this3, _reAddTaskTodo, _reAddTaskTodo2).call(_this3, task_todo, delayMs);
-            },
+            retry: retry,
             next: resolve
           });
-        case 17:
+        case 18:
           result = _context7.sent;
           if (!this.callbackInWorker) {
-            _context7.next = 22;
+            _context7.next = 23;
             break;
           }
-          _context7.next = 21;
+          _context7.next = 22;
           return promise;
-        case 21:
-          result = _context7.sent;
         case 22:
-          _context7.next = 27;
+          result = _context7.sent;
+        case 23:
+          _context7.next = 29;
           break;
-        case 24:
-          _context7.prev = 24;
-          _context7.t0 = _context7["catch"](5);
+        case 25:
+          _context7.prev = 25;
+          _context7.t0 = _context7["catch"](6);
           error = _context7.t0;
-        case 27:
+          if (this.autoRetry) {
+            retry();
+          }
+        case 29:
           cbArgs = {
             data: data,
             result: result,
@@ -880,11 +909,11 @@ function _exec3() {
           if (_classPrivateFieldGet(this, _activeWorker) <= 0) {
             (_classPrivateFieldGet29 = _classPrivateFieldGet(this, _events).activeWorkerClear) === null || _classPrivateFieldGet29 === void 0 || (_classPrivateFieldGet30 = _classPrivateFieldGet29.Resolve) === null || _classPrivateFieldGet30 === void 0 || _classPrivateFieldGet30.call(_classPrivateFieldGet29);
           }
-        case 33:
+        case 35:
         case "end":
           return _context7.stop();
       }
-    }, _callee7, this, [[5, 24]]);
+    }, _callee7, this, [[6, 25]]);
   }));
   return _exec3.apply(this, arguments);
 }
@@ -899,40 +928,43 @@ function _waitAddOrDone3() {
       while (1) switch (_context8.prev = _context8.next) {
         case 0:
           _context8.next = 2;
-          return this.events.resume;
+          return _classPrivateFieldGet(this, _limitPromise);
         case 2:
+          _context8.next = 4;
+          return this.events.resume;
+        case 4:
           if (!(_classPrivateFieldGet(this, _queue).length > 0)) {
-            _context8.next = 8;
+            _context8.next = 10;
             break;
           }
           if (!(_classPrivateFieldGet(this, _activeWorker) >= this.parallel)) {
-            _context8.next = 6;
+            _context8.next = 8;
             break;
           }
-          _context8.next = 6;
+          _context8.next = 8;
           return this.events.parallelIdel;
-        case 6:
-          _context8.next = 23;
-          break;
         case 8:
+          _context8.next = 25;
+          break;
+        case 10:
           if (!(_classPrivateFieldGet(this, _activeWorker) > 0 || _classPrivateFieldGet(this, _reAddCount) > 0)) {
-            _context8.next = 14;
+            _context8.next = 16;
             break;
           }
           // 任务队列为0
           _classPrivateFieldGet(this, _events).activeWorkerClear = GetPromiseKit(function () {
             _classPrivateFieldGet(_this4, _events).activeWorkerClear = {};
           });
-          _context8.next = 12;
+          _context8.next = 14;
           return Promise.any([// 有新任务增加
           (_classPrivateFieldGet31 = _classPrivateFieldGet(this, _events).queueAdd) === null || _classPrivateFieldGet31 === void 0 ? void 0 : _classPrivateFieldGet31.Promise, // 所有并发任务完成
           (_classPrivateFieldGet32 = _classPrivateFieldGet(this, _events).activeWorkerClear) === null || _classPrivateFieldGet32 === void 0 ? void 0 : _classPrivateFieldGet32.Promise]);
-        case 12:
-          _context8.next = 23;
-          break;
         case 14:
+          _context8.next = 25;
+          break;
+        case 16:
           if (!(_classPrivateFieldGet(this, _queue).length == 0 && _classPrivateFieldGet(this, _activeWorker) == 0 && _classPrivateFieldGet(this, _reAddCount) == 0 && _classPrivateFieldGet(this, _waitTime) > 0)) {
-            _context8.next = 21;
+            _context8.next = 23;
             break;
           }
           _WaitTimeout = WaitTimeout(_classPrivateFieldGet(this, _waitTime)), _WaitTimeout2 = _slicedToArray(_WaitTimeout, 2), p = _WaitTimeout2[0], r = _WaitTimeout2[1];
@@ -940,15 +972,15 @@ function _waitAddOrDone3() {
             Promise: p,
             Resolve: r
           };
-          _context8.next = 19;
+          _context8.next = 21;
           return Promise.any([(_classPrivateFieldGet33 = _classPrivateFieldGet(this, _events).delayAllWorkerTime) === null || _classPrivateFieldGet33 === void 0 ? void 0 : _classPrivateFieldGet33.Promise, (_classPrivateFieldGet34 = _classPrivateFieldGet(this, _events).queueAdd) === null || _classPrivateFieldGet34 === void 0 ? void 0 : _classPrivateFieldGet34.Promise]);
-        case 19:
-          _context8.next = 23;
-          break;
         case 21:
-          _context8.next = 23;
-          return sleep(0);
+          _context8.next = 25;
+          break;
         case 23:
+          _context8.next = 25;
+          return sleep(0);
+        case 25:
         case "end":
           return _context8.stop();
       }

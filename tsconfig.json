@@ -4,12 +4,13 @@
     "declaration": false,
     "jsx": "preserve",
     "baseUrl": "./",
+    "esModuleInterop": true,
     "paths": {
       "@/*": ["./src/*"],
       "@shared/*": ["./shared/*"],
       "@api/*": ["./api/*"]
     }
   },
-  "include": ["src", "shared", "config", "modern.config.ts", "api"],
-  "exclude": ["**/node_modules"]
+  "include": ["src", "shared", "config", "modern.config.ts", "api/**/*.ts"],
+  "exclude": ["**/node_modules", "shared/async-pool/**/*.js"]
 }

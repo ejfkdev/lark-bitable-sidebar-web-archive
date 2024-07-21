@@ -54,7 +54,7 @@ __export(async_pool_exports, {
 });
 module.exports = __toCommonJS(async_pool_exports);
 var import_utils = require("./utils");
-var _waitTime, _queue, _running, _paused, _needBreak, _activeWorker, _reAddCount, _reAddTaskTodo, reAddTaskTodo_fn, _next, next_fn, _exec, exec_fn, _waitAddOrDone, waitAddOrDone_fn, _rateLimit, rateLimit_fn, _events;
+var _waitTime, _queue, _running, _paused, _needBreak, _activeWorker, _reAddCount, _limitPromise, _reAddTaskTodo, reAddTaskTodo_fn, _next, next_fn, _exec, exec_fn, _waitAddOrDone, waitAddOrDone_fn, _rateLimit, rateLimit_fn, _events;
 var AsyncPool = class {
   /**
    *
@@ -74,6 +74,8 @@ var AsyncPool = class {
     maxRetryCount: Number.MAX_SAFE_INTEGER,
     waitTime: 0,
     autoRun: true,
+    autoRetry: false,
+    retryDelay: 0,
     worker: null,
     taskResultCallback: null,
     taskErrorCallback: null,
@@ -159,9 +161,19 @@ var AsyncPool = class {
     this.taskFailCallback = null;
     /**
      * 任务最多重试次数，如果任务失败重试次数超过该限制，任务数据会被丢弃不再添加到任务队列中
-     * @default Number.MAX_SAFE_INTEGER
+     * @default 2**3
      */
     this.maxRetryCount = 2 ** 3;
+    /**
+     * 是否自动重试失败的任务
+     * @default false
+     */
+    this.autoRetry = false;
+    /**
+     * 重试任务默认延迟
+     * @default 0
+     */
+    this.retryDelay = 0;
     /**
      * 触发所有任务完成之前等待的冗余时间
      */
@@ -207,6 +219,10 @@ var AsyncPool = class {
      * 如果有即将到来的任务，那么所有任务完成事件先不触发
      */
     __privateAdd(this, _reAddCount, 0);
+    /**
+     * 限速等待
+     */
+    __privateAdd(this, _limitPromise, null);
     __privateAdd(this, _events, {
       /** 达到恢复状态 */
       resume: {},
@@ -305,6 +321,8 @@ var AsyncPool = class {
     options.queueCacheLimit = options.queueCacheLimit ?? Number.MAX_SAFE_INTEGER;
     this.queueCacheLimit = options.queueCacheLimit < 1 ? 1 : options.queueCacheLimit;
     this.callbackInWorker = options.callbackInWorker ?? false;
+    this.autoRetry = options.autoRetry ?? false;
+    this.retryDelay = options.retryDelay ?? 0;
     __privateGet(this, _events).run = (0, import_utils.GetPromiseKit)();
     __privateGet(this, _events).stop = (0, import_utils.GetPromiseKit)();
     __privateGet(this, _events).oneWorkerDone = (0, import_utils.GetPromiseKit)();
@@ -465,7 +483,7 @@ var AsyncPool = class {
    * @returns
    */
   async run() {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a, _b, _c, _d, _e, _f, _g, _h;
     if (__privateGet(this, _running) || __privateGet(this, _queue).length == 0) {
       return false;
     }
@@ -473,6 +491,7 @@ var AsyncPool = class {
     __privateSet(this, _needBreak, false);
     __privateGet(this, _events).allWorkerDone = (0, import_utils.GetPromiseKit)();
     (_b = (_a = __privateGet(this, _events).run) == null ? void 0 : _a.Resolve) == null ? void 0 : _b.call(_a);
+    await __privateGet(this, _limitPromise);
     while (true) {
       if (__privateGet(this, _needBreak)) {
         break;
@@ -489,17 +508,19 @@ var AsyncPool = class {
       if (__privateGet(this, _activeWorker) >= this.parallel) {
         __privateGet(this, _events).parallelIdel = (0, import_utils.GetPromiseKit)();
       }
-      await __privateMethod(this, _rateLimit, rateLimit_fn).call(this, task_todo);
+      __privateSet(this, _limitPromise, __privateMethod(this, _rateLimit, rateLimit_fn).call(this, task_todo));
       __privateMethod(this, _exec, exec_fn).call(this, task_todo);
     }
     __privateSet(this, _needBreak, false);
     __privateSet(this, _running, false);
     if (__privateGet(this, _queue).length == 0 && __privateGet(this, _activeWorker) == 0 && __privateGet(this, _reAddCount) == 0) {
       (_e = (_d = __privateGet(this, _events).allWorkerDone) == null ? void 0 : _d.Resolve) == null ? void 0 : _e.call(_d);
+      (_f = this.allWorkerDoneCallback) == null ? void 0 : _f.call(this);
     }
-    (_g = (_f = __privateGet(this, _events).stop) == null ? void 0 : _f.Resolve) == null ? void 0 : _g.call(_f);
+    (_h = (_g = __privateGet(this, _events).stop) == null ? void 0 : _g.Resolve) == null ? void 0 : _h.call(_g);
     __privateGet(this, _events).stop = (0, import_utils.GetPromiseKit)();
     __privateGet(this, _events).run = (0, import_utils.GetPromiseKit)();
+    __privateSet(this, _limitPromise, __privateMethod(this, _rateLimit, rateLimit_fn).call(this, null));
     return true;
   }
 };
@@ -510,6 +531,7 @@ _paused = new WeakMap();
 _needBreak = new WeakMap();
 _activeWorker = new WeakMap();
 _reAddCount = new WeakMap();
+_limitPromise = new WeakMap();
 _reAddTaskTodo = new WeakSet();
 reAddTaskTodo_fn = function(task_todo, delayMs) {
   task_todo.retryCount = task_todo.retryCount ?? 0;
@@ -563,6 +585,12 @@ exec_fn = async function(task_todo) {
   let retried = false;
   let { data, worker, workerFn, retryCount } = task_todo;
   retryCount = retryCount ?? 0;
+  const retry = (delayMs) => {
+    if (retried)
+      return;
+    retried = true;
+    return __privateMethod(this, _reAddTaskTodo, reAddTaskTodo_fn).call(this, task_todo, delayMs ?? this.retryDelay);
+  };
   try {
     if (workerFn != null && (0, import_utils.isExecutable)(workerFn)) {
       result = await workerFn(this);
@@ -578,10 +606,7 @@ exec_fn = async function(task_todo) {
         {
           retryCount,
           pool: this,
-          retry: (delayMs) => {
-            retried = true;
-            __privateMethod(this, _reAddTaskTodo, reAddTaskTodo_fn).call(this, task_todo, delayMs);
-          },
+          retry,
           next: resolve
         }
       );
@@ -591,6 +616,9 @@ exec_fn = async function(task_todo) {
     }
   } catch (e) {
     error = e;
+    if (this.autoRetry) {
+      retry();
+    }
   }
   const cbArgs = {
     data,
@@ -617,6 +645,7 @@ exec_fn = async function(task_todo) {
 _waitAddOrDone = new WeakSet();
 waitAddOrDone_fn = async function() {
   var _a, _b, _c, _d;
+  await __privateGet(this, _limitPromise);
   await this.events.resume;
   if (__privateGet(this, _queue).length > 0) {
     if (__privateGet(this, _activeWorker) >= this.parallel) {

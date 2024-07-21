@@ -55,9 +55,19 @@ export declare class AsyncPool<T = any> {
     taskFailCallback: TaskCallback<T> | null;
     /**
      * 任务最多重试次数，如果任务失败重试次数超过该限制，任务数据会被丢弃不再添加到任务队列中
-     * @default Number.MAX_SAFE_INTEGER
+     * @default 2**3
      */
     maxRetryCount: number;
+    /**
+     * 是否自动重试失败的任务
+     * @default false
+     */
+    autoRetry: boolean;
+    /**
+     * 重试任务默认延迟
+     * @default 0
+     */
+    retryDelay: number;
     /**
      * 任务队列缓存上限
      *

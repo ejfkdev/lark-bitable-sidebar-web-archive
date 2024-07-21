@@ -9,7 +9,7 @@
       "btn": "备份网页",
       "doc": "说明文档",
       "blank": "请先配置源字段和目标字段",
-      "nourl": "列中没有链接",
+      "nourl": "列中没有链接或者都已经备份",
       "done": "网页备份完成"
     }
   },
@@ -23,7 +23,7 @@
       "btn": "備份網頁",
       "doc": "說明文件",
       "blank": "請先配置源欄位和目標欄位",
-      "nourl": "列中没有連結",
+      "nourl": "列中沒有鏈接或者都已經備份",
       "done": "網頁備份完成"
     }
   },
@@ -37,7 +37,7 @@
       "btn": "備份網頁",
       "doc": "說明文件",
       "blank": "請先配置源欄位和目標欄位",
-      "nourl": "列中没有連結",
+      "nourl": "列中沒有鏈接或者都已經備份",
       "done": "網頁備份完成"
     }
   },
@@ -51,7 +51,7 @@
       "btn": "Backup Webpage",
       "doc": "Documentation",
       "blank": "Please configure the source field and target field first",
-      "nourl": "No link in the column",
+      "nourl": "No links in the column, or they have all been backed up",
       "done": "Webpage backup completed"
     }
   },
@@ -65,7 +65,7 @@
       "btn": "ウェブページをバックアップ",
       "doc": "ドキュメント",
       "blank": "まず、元のフィールドとターゲットのフィールドを設定してください",
-      "nourl": "列にリンクがありません",
+      "nourl": "列にはリンクがないか、すべてバックアップされています",
       "done": "ウェブページのバックアップが完了しました"
     }
   },

@@ -1,9 +1,9 @@
+/* eslint-disable max-lines */
 import './index.css';
 import {
   bitable,
   FieldType,
-  IOpenSegmentType,
-  IOpenUrlSegment,
+  IOpenAttachment,
   ToastType,
   type IFieldMeta,
   type ITable,
@@ -18,64 +18,26 @@ import {
   Button,
   Skeleton,
   Link,
-  Progress,
 } from '@arco-design/web-react';
 import {
+  IconAttachment,
   IconCamera,
   IconDown,
+  IconLink,
   IconQuestionCircle,
 } from '@arco-design/web-react/icon';
 import { useAsyncEffect, useCounter, useMemoizedFn } from 'ahooks';
-import zhCN from '@arco-design/web-react/es/locale/zh-CN';
-import enUS from '@arco-design/web-react/es/locale/en-US';
-import jaJP from '@arco-design/web-react/es/locale/ja-JP';
-import koKR from '@arco-design/web-react/es/locale/ko-KR';
-import idID from '@arco-design/web-react/es/locale/id-ID';
-import thTH from '@arco-design/web-react/es/locale/th-TH';
-import zhHK from '@arco-design/web-react/es/locale/zh-HK';
-import frFR from '@arco-design/web-react/es/locale/fr-FR';
-import esES from '@arco-design/web-react/es/locale/es-ES';
-import deDE from '@arco-design/web-react/es/locale/de-DE';
-import itIT from '@arco-design/web-react/es/locale/it-IT';
-import viVN from '@arco-design/web-react/es/locale/vi-VN';
 import archive from '@api/archive';
-import { AsyncPool } from 'lib/async-pool/esm';
+import { AsyncPool, type WorkerOptions } from '@shared/async-pool/esm';
 import { useTranslation } from 'react-i18next';
+import { base64ToFile, getLocale } from '@shared/utils';
+import { CProgressStacked, CProgress } from '@coreui/react';
+import '@coreui/coreui/dist/css/coreui.min.css';
+import { sleep } from '@shared/async-pool/cjs';
 
 const Index = () => {
   const [locale, setLocale] = useState('zh-CN');
   const { t } = useTranslation();
-
-  function getLocale() {
-    switch (locale) {
-      case 'zh-CN':
-        return zhCN;
-      case 'en-US':
-        return enUS;
-      case 'ja-JP':
-        return jaJP;
-      case 'ko-KR':
-        return koKR;
-      case 'id-ID':
-        return idID;
-      case 'th-TH':
-        return thTH;
-      case 'zh-HK':
-        return zhHK;
-      case 'fr-FR':
-        return frFR;
-      case 'es-ES':
-        return esES;
-      case 'de-DE':
-        return deDE;
-      case 'it-IT':
-        return itIT;
-      case 'vi-VN':
-        return viVN;
-      default:
-        return enUS;
-    }
-  }
 
   const [ready, setReady] = useState(false);
   const [loading, setLoding] = useState(false);
@@ -85,6 +47,7 @@ const Index = () => {
   const [srcID, setSrcID] = useState<string | undefined>(undefined);
   const [dstID, setDstID] = useState<string | undefined>(undefined);
   const [done, { inc: incDone, reset: resetDone }] = useCounter(0);
+  const [fail, { inc: incFail, reset: resetFail }] = useCounter(0);
   const [total, { inc: incTotal, reset: resetTotal }] = useCounter(0);
 
   bitable.bridge.getTheme().then(theme => updateTheme(theme));
@@ -113,12 +76,12 @@ const Index = () => {
     setTable(table);
     setTableName(await table.getName());
     await updateFieldMetaList();
-    await updateConfigData();
+    requestAnimationFrame(updateConfigData);
   };
 
   // 同步当前table的field
   const updateFieldMetaList = useMemoizedFn(async () => {
-    const fieldMetaList = await table!.getFieldMetaListByType(FieldType.Url);
+    const fieldMetaList = await table!.getFieldMetaList();
     setFieldMetaList(fieldMetaList);
   });
 
@@ -128,11 +91,11 @@ const Index = () => {
       return;
     }
     const srcid = await bitable.bridge.getData<string>(`srcID/${table?.id}`);
-    if (String(srcid).startsWith('fld')) {
+    const dstid = await bitable.bridge.getData<string>(`dstID/${table?.id}`);
+    if (fieldMetaList?.some(f => f.id === srcid)) {
       setSrcID(srcid);
     }
-    const dstid = await bitable.bridge.getData<string>(`dstID/${table?.id}`);
-    if (String(dstid).startsWith('fld')) {
+    if (fieldMetaList?.some(f => f.id === dstid)) {
       setDstID(dstid);
     }
   });
@@ -147,28 +110,99 @@ const Index = () => {
     }
   };
 
-  const archiveURL = useMemoizedFn(async (src: any) => {
-    const data = await archive({ query: { url: src.value[0].link } });
-    if (data.ok) {
-      await table?.setCellValue<IOpenUrlSegment[]>(
-        dstID as string,
-        src.record_id,
-        [
-          {
-            type: IOpenSegmentType.Url,
-            text: data.url,
-            link: data.url,
-          },
-        ],
-      );
-    }
-    incDone();
+  const fetchArchive = useMemoizedFn(
+    async (src: any, workerCtx: WorkerOptions<any>) => {
+      const url = src.value[0].link as string;
+      const data = await archive({ query: { url } });
+      console.log(`fetchArchive`, url, data?.ok);
+      if (data.ok === 1) {
+        try {
+          const file = base64ToFile(
+            data.base64,
+            data.filename,
+            'application/zip',
+          );
+          uploadPool.addTodo({
+            src,
+            file,
+          });
+          console.log(`fetchArchive ok`, url, data.filename, file.size);
+        } catch (error) {
+          console.log(`fetchArchive`, error);
+          workerCtx.retry(1000);
+        }
+      } else {
+        workerCtx.retry(1000);
+      }
+    },
+  );
+
+  const fetchPool = new AsyncPool({
+    parallel: 6,
+    waitTime: 1000,
+    maxRetryCount: 2,
+    worker: fetchArchive,
+    taskFailCallback: () => {
+      console.log(`incFail fetchPool taskFailCallback`);
+      incFail();
+    },
   });
 
-  const pool = new AsyncPool({
-    parallel: 6,
-    waitTime: 100,
-    worker: archiveURL,
+  const uploadArchive = useMemoizedFn(
+    async (data: any, workerCtx: WorkerOptions<any>) => {
+      try {
+        console.log(`uploadArchive start`, Date.now());
+        const tokens = await bitable.base.batchUploadFile([data.file]);
+        if (
+          !(tokens && tokens.length > 0 && tokens[0] && tokens[0].length > 0)
+        ) {
+          console.log(`incFail uploadArchive token null`, tokens);
+          incFail();
+          return;
+        }
+        console.log(
+          `uploadArchive file_token`,
+          data.src.value[0].link,
+          tokens[0],
+        );
+        const response = await table?.setCellValue<IOpenAttachment[]>(
+          dstID as string,
+          data.src.record_id,
+          [
+            {
+              token: tokens[0],
+              size: data.file.size,
+              name: data.file.name,
+              type: data.file.type,
+              timeStamp: new Date().getTime(),
+            },
+          ],
+        );
+        if (response) {
+          incDone();
+        } else {
+          console.log(`incFail uploadArchive write cell`);
+          incFail();
+        }
+      } catch (error) {
+        console.log(`uplaodArchive error`, error);
+        workerCtx.retry(1000);
+      }
+    },
+  );
+
+  const uploadPool = new AsyncPool({
+    parallel: 1,
+    maxRetryCount: 0,
+    worker: uploadArchive,
+    waitTime: 5000,
+    rateLimiter: async (next: () => void) => {
+      await sleep(2000);
+      next();
+    },
+    taskFailCallback: () => {
+      incFail();
+    },
   });
 
   const onArchive = useMemoizedFn(async () => {
@@ -181,25 +215,17 @@ const Index = () => {
     }
     setLoding(true);
     resetDone();
+    resetFail();
     resetTotal();
+
     const srcField = await table?.getFieldById(srcID);
     const dstField = await table?.getFieldById(dstID);
     bitable.bridge.setData(`srcID/${table?.id}`, srcID);
     bitable.bridge.setData(`dstID/${table?.id}`, dstID);
-    // const srcName = await srcField?.getName();
-    // const dstName = await dstField?.getName();
-    let srcValues = await srcField
-      ?.getFieldValueList
-      // `[${srcName}].isblank().not().and([${srcName}].lower().containtext("https://web.archive.org").not())`,
-      ();
-    const dstValues =
-      (await dstField
-        ?.getFieldValueList
-        // `[${dstName}].isblank()`
-        ()) ?? [];
+    let srcValues = await srcField?.getFieldValueList();
+    const dstValues = (await dstField?.getFieldValueList()) ?? [];
     const dstRecordIds = dstValues.map(d => d.record_id);
-    console.log(`srcValues`, srcValues);
-    console.log(`dstValues`, dstValues);
+    // 不重复处理已经有附件的链接
     srcValues = srcValues?.filter(v => !dstRecordIds.includes(v.record_id));
     if (!srcValues || srcValues?.length === 0) {
       bitable.ui.showToast({
@@ -210,17 +236,20 @@ const Index = () => {
       return;
     }
     for (const src of srcValues ?? []) {
-      pool.addTodo(src);
+      fetchPool.addTodo(src);
       incTotal();
     }
-    if (pool.activeWorkerCounts() + pool.queueCounts() > 0) {
-      await pool.waitAllWorkerDone();
+    if (fetchPool.activeWorkerCounts() + fetchPool.queueCounts() > 0) {
+      await fetchPool.waitAllWorkerDone();
+      if (uploadPool.activeWorkerCounts() + uploadPool.queueCounts() > 0) {
+        await uploadPool.waitAllWorkerDone();
+      }
     }
-    setLoding(false);
     bitable.ui.showToast({
       toastType: ToastType.warning,
       message: t('done'),
     });
+    setLoding(false);
   });
 
   if (!ready) {
@@ -229,35 +258,53 @@ const Index = () => {
 
   return (
     // @ts-expect-error
-    <ConfigProvider locale={getLocale()}>
+    <ConfigProvider locale={getLocale(locale)}>
       <Space direction="vertical" size="medium" style={{ width: '100%' }}>
         <Typography.Text>{tableName}</Typography.Text>
         <Select
           showSearch
-          addBefore={t('src')}
+          addBefore={
+            <>
+              {t('src')}
+              <IconLink />
+            </>
+          }
           placeholder={t('src.msg')}
           defaultValue={srcID}
           value={srcID}
-          onChange={value => {
-            setSrcID(value);
-            if (dstID === value) {
-              setDstID('');
-            }
-          }}
+          onChange={value => setSrcID(value)}
         >
-          {fieldMetaList?.map(meta => (
-            <Select.Option key={meta.id} value={meta.id}>
-              {meta.name}
-            </Select.Option>
-          ))}
+          {fieldMetaList
+            ?.filter(meta => meta.type === FieldType.Url)
+            ?.map(meta => (
+              <Select.Option key={meta.id} value={meta.id}>
+                {meta.name}
+              </Select.Option>
+            ))}
         </Select>
         <Select
           showSearch
-          addBefore={t('dst')}
+          allowCreate
+          addBefore={
+            <>
+              {t('dst')}
+              <IconAttachment />
+            </>
+          }
           placeholder={t('dst.msg')}
           defaultValue={dstID}
           value={dstID}
-          onChange={value => setDstID(value)}
+          onChange={async (value: string) => {
+            if (value.startsWith('fld')) {
+              setDstID(value);
+            } else if (table) {
+              const id = await table.addField({
+                name: value,
+                type: FieldType.Attachment,
+              });
+              setDstID(id);
+            }
+          }}
           suffixIcon={
             <Space size={'small'}>
               <Tooltip content={t('dst.tip')}>
@@ -268,7 +315,7 @@ const Index = () => {
           }
         >
           {fieldMetaList
-            ?.filter(meta => meta.id !== srcID)
+            ?.filter(meta => meta.type === FieldType.Attachment)
             ?.map(meta => (
               <Select.Option key={meta.id} value={meta.id}>
                 {meta.name}
@@ -286,7 +333,8 @@ const Index = () => {
             {t('btn')}
           </Button>
           <Link
-            href="https://ejfk-dev.feishu.cn/wiki/AZO5wW0tuijuCqkOs76cbENcnxh"
+            target="_blank"
+            href="https://ejfk-dev.feishu.cn/wiki/UrG7wAgrciUor6kkGJKcApAFn7c"
             icon
           >
             {t('doc')}
@@ -294,12 +342,22 @@ const Index = () => {
         </Space>
 
         {total > 0 && (
-          <Progress
-            animation={loading}
-            percent={total > 0 ? (done / total) * 100 : 0}
-            status={loading ? 'warning' : 'success'}
-            formatText={() => `${done} / ${total}`}
-          />
+          <>
+            <CProgressStacked style={{ height: 4 }}>
+              <CProgress
+                height={4}
+                color="success"
+                animated
+                value={total > 0 ? (done / total) * 100 : 0}
+              />
+              <CProgress
+                height={4}
+                color="danger"
+                value={total > 0 ? (fail / total) * 100 : 0}
+              />
+            </CProgressStacked>
+            <Typography.Text type="secondary">{`✅${done}  ❎${fail} / ⌛️${total}`}</Typography.Text>
+          </>
         )}
       </Space>
     </ConfigProvider>
